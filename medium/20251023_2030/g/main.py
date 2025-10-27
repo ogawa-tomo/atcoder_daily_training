@@ -6,7 +6,6 @@ class Node:
         self.i = i
         self.color: str | None = None  # "black" or "white"
         self.to_nodes: list[Node] = []
-        self.to_nodes_num = 0
         self.renketsu: Renketsu | None = None
 
 
@@ -29,27 +28,21 @@ for _ in range(M):
     node_u = nodes[u]
     node_v = nodes[v]
     node_u.to_nodes.append(node_v)
-    node_u.to_nodes_num += 1
     node_v.to_nodes.append(node_u)
-    node_v.to_nodes_num += 1
 
 # 連結成分に分解
 # それぞれの連結成分について、色を塗って2部グラフであるかを判定
 # また、連結成分ごとに、黒の数と白の数を保持する
-d: deque[Node] = deque()
-for node in nodes:
-    d.append(node)
-while d:
-    start_node = d.popleft()
+for start_node in nodes:
     if start_node.color is not None:
         continue
     # 色のついていないノードがあれば、それについて連結成分を作成し、色をつけていく
     renketsu = Renketsu()
-    dd: deque[Node] = deque()
-    dd.append(start_node)
+    d: deque[Node] = deque()
+    d.append(start_node)
     start_node.color = "black"
-    while dd:
-        node = dd.popleft()
+    while d:
+        node = d.popleft()
         node.renketsu = renketsu
         if node.color == "black":
             renketsu.black_num += 1
@@ -65,7 +58,7 @@ while d:
                     to_node.color = "white"
                 else:
                     to_node.color = "black"
-                dd.append(to_node)
+                d.append(to_node)
 
 # それぞれのノードについて、以下の数を答えに足す
 # 自分の連結成分の自分と異なる色の数 - 自分から出ているリンクの数
@@ -76,9 +69,9 @@ for node in nodes:
         raise
     renketsu = node.renketsu
     if node.color == "black":
-        answer += renketsu.white_num - node.to_nodes_num
+        answer += renketsu.white_num - len(node.to_nodes)
     elif node.color == "white":
-        answer += renketsu.black_num - node.to_nodes_num
+        answer += renketsu.black_num - len(node.to_nodes)
     answer += N - renketsu.total_num()
 
 # 2で割っておわり
