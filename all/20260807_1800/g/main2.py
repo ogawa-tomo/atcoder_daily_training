@@ -1,8 +1,4 @@
-# 再帰関数を使う問題はPyPyだとTLEになることがあるので注意！CPythonにしたほうがよい。
-import sys
-
-# 再帰呼び出しの深さの上限を深くする
-sys.setrecursionlimit(10**9)  # 10^9が限界らしく、10^10にするとREになっちゃった
+from collections import deque
 
 
 class Node:
@@ -34,21 +30,25 @@ for _ in range(M):
     to_node.from_edges.append(edge)
 
 
-def fill(node: Node, x: int):
-    node.x = x
-
-    for edge in node.to_edges:
-        to_node = edge.to_node
-        if to_node.x is None:
-            fill(to_node, x + edge.weight)
-    for edge in node.from_edges:
-        from_node = edge.from_node
-        if from_node.x is None:
-            fill(from_node, x - edge.weight)
-
-
 for node in nodes:
-    if node.x is None:
-        fill(node, 0)
+    if node.x is not None:
+        continue
+    d: deque[Node] = deque()
+    d.append(node)
+    node.x = 0
+    while d:
+        current_node = d.popleft()
+        if current_node.x is None:
+            raise
+        for to_edge in current_node.to_edges:
+            to_node = to_edge.to_node
+            if to_node.x is None:
+                to_node.x = current_node.x + to_edge.weight
+                d.append(to_node)
+        for from_edge in current_node.from_edges:
+            from_node = from_edge.from_node
+            if from_node.x is None:
+                from_node.x = current_node.x - from_edge.weight
+                d.append(from_node)
 
 print(*[node.x for node in nodes])
